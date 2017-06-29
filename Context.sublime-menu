@@ -1,0 +1,17 @@
+[
+    { "caption": "-" },
+    {
+        "caption": "Ensime",
+        "children":
+        [
+          {
+            "caption": "Maintenance",
+            "children":
+            [
+              { "caption": "Startup", "command": "ensime_startup" },
+              { "caption": "Shutdown", "command": "ensime_shutdown" }
+            ]
+          }
+        ]
+    }
+]

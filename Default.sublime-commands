@@ -1,0 +1,10 @@
+[
+  {
+    "caption": "Ensime: Startup",
+    "command": "ensime_startup"
+  },
+  {
+    "caption": "Ensime: Shutdown",
+    "command": "ensime_shutdown"
+  }
+]

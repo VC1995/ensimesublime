@@ -1,0 +1,4 @@
+{
+  // build settings
+  "sbt_binary": "/usr/local/bin/sbt"
+}
