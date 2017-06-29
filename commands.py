@@ -1,5 +1,7 @@
 import sublime
 
+import sys
+
 from .ensimesublime.core import EnsimeWindowCommand
 from .ensimesublime.launcher import EnsimeLauncher
 from .ensimesublime.client import EnsimeClient
@@ -13,8 +15,10 @@ class EnsimeStartup(EnsimeWindowCommand):
     def run(self):
         try:
             self.env.recalc()
-        except Exception as err:
-            sublime.error_message(err)
+        except Exception:
+            typ, value, traceback = sys.exc_info()
+            sublime.error_message("Got an error :\n{t} : {val}"
+                                  .format(t=typ, val=str(value).split(".")[-1]))
         else:
             l = EnsimeLauncher(self.env.config)
             self.env.client = EnsimeClient(self.env.logger, l, self.env.connection_timeout)

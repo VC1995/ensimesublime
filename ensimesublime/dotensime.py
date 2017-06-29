@@ -36,4 +36,4 @@ def load(window):
     raise DotEnsimeNotFound(errno.ENOENT,
                             """Ensime has failed to find a .ensime file within this project.
 Create a .ensime file by running'sbt ensimeConfig' or equivalent for your build tool.\n""",
-                            window.folders()[0])
+                            window.folders())
