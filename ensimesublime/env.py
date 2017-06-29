@@ -42,7 +42,14 @@ Raised an error : {err}""".format(window=window_key, err=e))
 
 
 class _EnsimeEnvironment(object):
-    """ """
+    """An Ensime Environment for a scala project.
+
+    It's construction might raise an error if a .ensime file is not found or
+    it cannot be parsed.
+
+    Every commmand requires an EnsimeEnvironment instance which is obtained through
+    getOrCreateNew. It contains the config map and loggger which can then be used for
+    further tasks."""
     def __init__(self, window):
         self.window = window
         self.logger = None
