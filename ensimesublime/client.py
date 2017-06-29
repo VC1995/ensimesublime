@@ -53,14 +53,14 @@ class EnsimeClient(ProtocolHandler):
 
         self.call_id = 0
         self.call_options = {}
-        self.server_connection_timeout = connection_timeout
+        self.connection_timeout = connection_timeout
 
         # Queue for messages received from the ensime server.
         self.queue = Queue()
         # By default, don't connect to server more than once
         self.number_try_connection = 1
 
-        self.running = True
+        self.running = False
         self.connected = False
 
         thread = Thread(name='queue-poller', target=self.queue_poll)
@@ -95,9 +95,27 @@ class EnsimeClient(ProtocolHandler):
             if connection_alive:
                 time.sleep(sleep_t)
 
+    def connect_when_ready(self, timeout, fallback):
+        """Given a maximum timeout, waits for the http port to be
+        written.
+        Tries to connect to the websocket if it's written.
+        """
+        if not self.ws:
+            while not self.ensime.is_ready() and (timeout > 0):
+                time.sleep(1)
+                timeout -= 1
+            if self.ensime.is_ready():
+                self.connected = self.connect_ensime_server()
+                self.logger.info("Connected to the server.")
+            else:
+                fallback()
+                self.logger.info("Couldn't connect to the server waited to long :(")
+        else:
+            self.logger.info("Already connected.")
+
     def setup(self):
         """Check the classpath and connect to the server if necessary."""
-        def lazy_initialize_ensime():
+        def initialize_ensime():
             if not self.ensime:
                 self.logger.info("----Initialising server----")
                 try:
@@ -106,35 +124,15 @@ class EnsimeClient(ProtocolHandler):
                     self.logger.error(err)
             return bool(self.ensime)
 
-        def connect_when_ready(timeout):
-            """Given a maximum timeout, waits for the http port to be
-            written.
-            Tries to connect to the websocket if it's written.
-            If successfull and websocket is up and running, returns True,
-            else returns False.
-            """
-            if not self.ws:
-                while not self.ensime.is_ready() and (timeout > 0):
-                    time.sleep(1)
-                    timeout -= 1
-                if self.ensime.is_ready():
-                    self.connect_ensime_server()
-                    return True
-                return False
-            return True
+        # True if ensime is up, otherwise False
+        self.running = initialize_ensime()
+        if self.running:
+            connect_when_ready_thread = Thread(target=self.connect_when_ready,
+                                               args=(self.connection_timeout, self.shutdown_server))
+            connect_when_ready_thread.daemon = True
+            connect_when_ready_thread.start()
 
-        # True if ensime is up and connection is ok, otherwise False
-        self.connected = (self.running and
-                          lazy_initialize_ensime() and
-                          connect_when_ready(self.server_connection_timeout))
-        if self.connected:
-            self.logger.info("Connected to the ensime server.")
-        else:
-            if self.ensime:
-                self.ensime.stop()
-                self.logger.info("Failed to connect. Shutting down the server.")
-            self.logger.info("Failed to start the server.")
-        return self.connected
+        return self.running
 
     def _display_ws_warning(self):
         warning = "A WS exception happened, 'ensime-sublime' has been disabled. " +\
@@ -181,9 +179,11 @@ class EnsimeClient(ProtocolHandler):
                 self.ws = websocket.create_connection(self.ensime_server, **options)
             if self.ws:
                 self.send_request({"typehint": "ConnectionInfoReq"})
+            return True
         else:
             # If it hits this, number_try_connection is 0
             disable_completely(None)
+            return False
 
     def shutdown_server(self):
         """Shut down server if it is running.
@@ -192,6 +192,7 @@ class EnsimeClient(ProtocolHandler):
         if self.ensime:
             self.ensime.stop()
             self.connected = False
+            self.running = False
 
     def teardown(self):
         """Shutdown down the client. Stop the server if connected."""

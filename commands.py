@@ -11,7 +11,6 @@ class EnsimeStartup(EnsimeWindowCommand):
         return bool(self.env and not self.env.running)
 
     def run(self):
-        # refreshes the config (fixes #29)
         try:
             self.env.recalc()
         except Exception as err:
@@ -19,11 +18,7 @@ class EnsimeStartup(EnsimeWindowCommand):
         else:
             l = EnsimeLauncher(self.env.config)
             self.env.client = EnsimeClient(self.env.logger, l, self.env.connection_timeout)
-            success = self.env.client.setup()
-            if not success:
-                self.env.logger.info("Ensime startup failed.")
-            else:
-                self.env.logger.info("Ensime startup complete.")
+            self.env.client.setup()
 
 
 class EnsimeShutdown(EnsimeWindowCommand):
