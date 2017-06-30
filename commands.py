@@ -5,6 +5,7 @@ import sys
 from .ensimesublime.core import EnsimeWindowCommand
 from .ensimesublime.launcher import EnsimeLauncher
 from .ensimesublime.client import EnsimeClient
+from .ensimesublime.env import getOrCreateNew
 
 
 class EnsimeStartup(EnsimeWindowCommand):

@@ -54,7 +54,9 @@ class _EnsimeEnvironment(object):
         self.window = window
         self.logger = None
         self.valid = False
-        self.recalc()
+        self.client = None
+        # Not valid when created, you must call recalc while starting up Ensime
+        # self.recalc()
 
     def create_logger(self, debug, log_file):
         logger = logging.getLogger("ensime")
@@ -112,4 +114,4 @@ class _EnsimeEnvironment(object):
     @property
     def running(self):
         """Tells if the ensime server is up and client is connected to it."""
-        return self.client is not None and self.client.connected
+        return self.client is not None and self.client.running
